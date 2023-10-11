@@ -1,66 +1,49 @@
-start = "12345678X"  #1 2 3  4 5 6 7 8 X 
-end = "7865432X1"   #7 6 8 5 4 3 2 X 1
+import time
+
+start = "X 1 2 3 4 5 6 7 8 9 10 11" 
+end = "1 2 X 3 4 5 6 7 8 9 10 11"   
 row=3
-col=3
+col=4
 
 class Node: 
-    def __init__(self, state):
+    def __init__(self, state, steps):
         self.state = state  
-        self.left = None 
-        self.right = None
-        self.up = None 
-        self.down = None 
+        self.steps = list(steps)
 
-def search(): 
-    startNode = Node(start)
-    endNode = Node(end)
-    movement(startNode, endNode)
-
-def movement(node1, node2):
-    new1State = node1.state
-    new2State = node2.state
-    success = 0
-    while (success == 0):  
-        dir1 =  directions(new1State)
-        dir2 = directions(new2State)
-        for x in dir1: 
-            if (x == "Hore"): 
-                moveUp(new1State)
-                node1.up = Node(new1State)
-            if (x == "Dole"): 
-                moveDown(new1State)
-                node1.down = Node(new1State)
-            if (x == "Vpravo"): 
-                moveRight(new1State)
-                node1.right = Node(new1State)
-            if (x == "Vlavo"): 
-                moveLeft(new1State)
-                node1.left = Node(new1State)
-        for x in dir2: 
-            if (x == "Hore"): 
-                moveUp(new2State)
-                node2.up = Node(new2State)
-            if (x == "Dole"): 
-                moveDown(new2State)
-                node2.down = Node(new2State)
-            if (x == "Vpravo"): 
-                moveRight(new2State)
-                node2.right = Node(new2State)
-            if (x == "Vlavo"): 
-                moveLeft(new2State)
-                node2.left = Node(new2State)
-        success = 1
-    
+def movement(node, nodes):
+    dir =  directions(node.state)
+    for x in dir: 
+        if (x == "Hore"): 
+            childNode1 = Node(node.state, node.steps)
+            moveUp(childNode1)
+            childNode1.steps.append("Hore")
+            nodes.append(childNode1)
+        if (x == "Dole"): 
+            childNode2 = Node(node.state, node.steps)
+            moveDown(childNode2)
+            childNode2.steps.append("Dole")
+            nodes.append(childNode2)
+        if (x == "Vpravo"): 
+            childNode3 = Node(node.state, node.steps)
+            moveRight(childNode3)
+            childNode3.steps.append("Vpravo")
+            nodes.append(childNode3)
+        if (x == "Vlavo"): 
+            childNode4 = Node(node.state, node.steps)
+            moveLeft(childNode4)
+            childNode4.steps.append("Vlavo")
+            nodes.append(childNode4)    
     
 
 def directions(state): 
+    state = state.split(" ")
     possibleDirections = []
-    xIndex = state.find("X")
+    xIndex = state.index("X")
     #movement up
-    if ((xIndex - 3) > 0 ):
+    if ((xIndex - row) > 0 ):
         possibleDirections.append("Hore")
     #movement down
-    if ((xIndex + 3) < len(state) - 1): 
+    if ((xIndex + row) < len(state)): 
         possibleDirections.append("Dole")
     #movement lef
     lavaStrana = 0
@@ -71,38 +54,108 @@ def directions(state):
         possibleDirections.append("Vlavo")
     #movement right 
     pravaStrana = 0 
-    for x in range (col):
-        if (xIndex == (row*x)-1) or xIndex == len(state) - 1:
+    for x in range(col):
+        if (xIndex == (row*x)-1) or xIndex == (len(state) - 1):
             pravaStrana = pravaStrana + 1
     if (pravaStrana == 0): 
         possibleDirections.append("Vpravo")
-
+    state = " ".join(state)
     return possibleDirections;  
     
 
-def moveLeft(state):     
-    indexOfX = state.find("X")
+def moveRight(node):     
+    state = node.state.split(" ")
+    indexOfX = state.index("X")
     tempNumber = state[indexOfX + 1]
     state[indexOfX + 1]  = state[indexOfX]
     state[indexOfX] = tempNumber
+    node.state = " ".join(state)
 
-def moveRight(state): 
-    indexOfX = state.find("X")
+def moveLeft(node): 
+    state = node.state.split(" ")
+    indexOfX = state.index("X")
     tempNumber = state[indexOfX - 1]
     state[indexOfX -1] = state[indexOfX]
     state[indexOfX] = tempNumber
+    node.state = " ".join(state)
 
-def moveUp(state): 
-    indexOfX = state.find("X")
+def moveUp(node): 
+    state = node.state.split(" ")
+    indexOfX = state.index("X")
+    dif = indexOfX - row
     tempNumber = state[indexOfX - row]
-    state[indexOfX - row] = state[indexOfX]
+    state[dif] = state[indexOfX]
     state[indexOfX] = tempNumber
+    node.state = " ".join(state)
 
-def moveDown(state): 
-    indexOfX = state.find("X")
+def moveDown(node): 
+    state = node.state.split(" ")
+    indexOfX = state.index("X")
     tempNumber = state[indexOfX + row]
     state[indexOfX + row] = state[indexOfX]
     state[indexOfX] = tempNumber
+    node.state = " ".join(state)
 
 
-search()
+startNode = Node(start, [])
+endNode = Node(end, [])
+startNodes = []
+tempStartNodes = []
+endNodes = []
+tempEndNodes = []
+success = 0
+layers = 0
+endSteps = []
+startNodes.append(startNode)
+endNodes.append(endNode)
+
+start = time.time()
+while (success == 0 or layers == 20):
+    for x in startNodes: 
+        movement(x, tempStartNodes)
+        
+    for y in endNodes: 
+        movement(y, tempEndNodes)
+    
+    for x in tempStartNodes: 
+        for y in tempEndNodes: 
+            if (x.state == end and success == 0): 
+                success = 1
+                for j in x.steps: 
+                    endSteps.append(j)
+            if (x.state == y.state and success == 0): 
+                success = 1
+                for j in x.steps: 
+                    endSteps.append(j)
+                for i in reversed(y.steps): 
+                    if (i == "Vlavo"):    
+                        endSteps.append("Vpravo")     
+                    elif (i == "Vpravo"): 
+                        endSteps.append("Vlavo")
+                    elif (i == "Hore"): 
+                        endSteps.append("Dole")
+                    elif (i == "Dole"): 
+                        endSteps.append("Hore")
+        for z in endNodes: 
+            if (z.state == x.state and success == 0): 
+                success = 1     
+                for j in x.steps: 
+                    endSteps.append(j)
+                for i in reversed(z.steps): 
+                    if (i == "Vlavo"):    
+                        endSteps.append("Vpravo")     
+                    elif (i == "Vpravo"): 
+                        endSteps.append("Vlavo")
+                    elif (i == "Hore"): 
+                        endSteps.append("Dole")
+                    elif (i == "Dole"): 
+                        endSteps.append("Hore")       
+                    
+    startNodes = tempStartNodes
+    endNodes = tempEndNodes
+    tempStartNodes = []
+    tempEndNodes = []
+    layers = layers + 1 #Prevention of infinite loop
+end = time.time()
+print("Total time: ", end - start)
+print(endSteps)
